@@ -30,7 +30,35 @@ public class Level {
 		for(int i = 0; i < numPlats ; i++ ){
 			//calculate initial y pos of platforms*/
 			y = (i+1)*(int)((float)(height) /(float)numPlats ); 
-			platforms[i] = new Platform(r, 0, y);
+			platforms[i] = new Platform(r, 0, y, 20, (int)(width*0.7));
+			/*Skew the platforms*/
+			if(i%2 == 0) //if is even
+			{
+				platforms[i].x = (width - platforms[i].length); //move it all the way to the right
+			}
+			
+		}
+		
+	}
+	
+	/**
+	 * 
+	 * @param width of screen
+	 * @param height of screen
+	 */
+	public Level(Resources r, int width, int height, int numPlats){
+		
+		this.width = width;
+		this.height = height;
+		int y;
+		this.numPlats = numPlats;
+		
+		/*Generate Platforms*/
+		platforms = new Platform[numPlats ];
+		for(int i = 0; i < numPlats ; i++ ){
+			//calculate initial y pos of platforms*/
+			y = (i+1)*(int)((float)(height) /(float)numPlats ); 
+			platforms[i] = new Platform(r, 0, y, 20, (int)(width*0.7));
 			/*Skew the platforms*/
 			if(i%2 == 0) //if is even
 			{

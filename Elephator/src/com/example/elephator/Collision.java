@@ -2,6 +2,8 @@ package com.example.elephator;
 
 import com.example.elephator.Creature;
 import com.example.elephator.Product;
+import com.example.elephator.Egg;
+import com.example.elephator.Platform;
 
 public class Collision {
 	
@@ -25,5 +27,15 @@ public class Collision {
 		}
 		
 	}
+	
+	public static boolean eggPlatformCollision(Egg egg, Platform plat){
+		if(((egg.y + egg.r) > plat.y) && (egg.y < plat.y)){
+			if((egg.x > plat.x) && ((egg.x + egg.r) < (plat.x + plat.length))){
+				return true;				
+			}			
+		}	
+		return false;
+	}
+	
 	
 }

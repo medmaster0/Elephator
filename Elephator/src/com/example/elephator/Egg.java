@@ -10,8 +10,6 @@ import android.os.Build;
 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
 public class Egg extends Product {
 	
-	public boolean isHatching = false;
-
 	public Egg(Resources r){
 		
 		super(r);
@@ -70,10 +68,60 @@ public class Egg extends Product {
 		}
 	}
 	
+	/**
+	 * Like hatch but takes half as much time to get to next frame
+	 * 
+	 */
+	public void hatchFast(){
+		while(this.currentFrame < 3){
+			long start = System.currentTimeMillis();
+			long now;
+			while(true){
+				now = System.currentTimeMillis();
+				if((now - start) > 50){
+					this.currentFrame++;
+					
+					break;
+				}
+			}
+			
+		}
+	}
+	
 	public void eggDrop(){
 		this.vy += this.gravity;
 		this.y += this.vy;
 		
+	}
+	
+	public void stopEgg(){
+		this.vy= 0;
+		this.vx = 0;
+		this.gravity = 0;
+	}
+	
+	public void move(int width, int height){
+		//gravity effects vy
+		vy = vy + gravity; 
+		
+		//set limits for terminal velocity
+		//if(vy > 10)vy = 10;
+	    //if(vy < -10)vy = -10;
+		
+	    y = y + vy;
+		x = x + vx;
+		if((x+r)>width|(x<0)){
+			vx = -vx; //bounce off walls
+		}
+		
+	}
+	
+	public void hatchThreadFast(){
+		new Thread(new Runnable() {
+	        public void run() {
+	        	hatchFast();
+	        }
+	    }).start();
 	}
 	
 }

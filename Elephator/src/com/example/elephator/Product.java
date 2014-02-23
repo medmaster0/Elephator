@@ -57,6 +57,17 @@ public class Product {
 		
 	}
 	
+	public void draw(Canvas canvas, double scale){
+		int srcX = currentFrame * width;
+		int srcY = currentDir * height;
+		Rect src = new Rect(srcX, srcY, srcX + width, srcY + height);
+		Rect dst = new Rect((int)(x),(int)(y), 
+				(int)(x + (scale * width)), (int)(y + (scale * height)));
+				//the scalar coeffeiciet of width and height SCALE the sprite by that much
+		canvas.drawBitmap(bmp, src, dst, null);
+		
+	}
+	
 	public void randomizeBmp(){
 		
 		/*Make some random colors*/

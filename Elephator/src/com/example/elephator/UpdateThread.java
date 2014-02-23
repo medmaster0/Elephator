@@ -8,12 +8,12 @@ public class UpdateThread extends Thread {
 	private long time;
 	private final int fps = 20;
 	private boolean toRun = false;
-	private ElephantView elephantView;
+	private UpdatableView upview;
 	private SurfaceHolder surfaceHolder;
 	
-	public UpdateThread(ElephantView rElephantView){
-		elephantView = rElephantView;
-		surfaceHolder = elephantView.getHolder();
+	public UpdateThread(UpdatableView upview){
+		this.upview = upview;
+		surfaceHolder = upview.getHolder();
 	}
 	
 	public void setRunning(boolean run){
@@ -28,8 +28,8 @@ public class UpdateThread extends Thread {
 				c = null;
 				try{
 					c = surfaceHolder.lockCanvas(null);
-					elephantView.updatePhysics();
-					elephantView.onDraw(c);
+					upview.updatePhysics();
+					upview.onDraw(c);
 				} finally {
 					if(c != null){
 						surfaceHolder.unlockCanvasAndPost(c);

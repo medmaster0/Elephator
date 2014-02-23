@@ -12,7 +12,7 @@ import android.os.Build;
 public class Background {
 	
 	public Bitmap bmp; 
-	public int width, height;
+	public int width, height; //width,height of screen
 	public int backY = 0;
 	
 	public Background(Resources r, int width, int height){
@@ -25,6 +25,11 @@ public class Background {
 		
 		this.width = width;
 		this.height = height;
+	}
+	
+	public void changeBack(Bitmap bmp){
+		this.bmp = bmp;
+		nearestNeighbor(bmp, width, height);
 	}
 	
 	public void drawBackground(Canvas c){
@@ -41,6 +46,7 @@ public class Background {
 		}
 		
 	}
+	
 	
 	/*Scales the image with the nearest neighbor filter:
 	 * Very pixelated block output

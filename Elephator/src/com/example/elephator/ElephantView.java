@@ -1,6 +1,14 @@
 package com.example.elephator;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -11,8 +19,9 @@ import android.view.SurfaceHolder;
 import android.view.GestureDetector.OnGestureListener;
 import android.view.SurfaceView;
 
+@SuppressLint("NewApi")
 public class ElephantView extends SurfaceView 
-	implements SurfaceHolder.Callback, OnGestureListener{
+	implements UpdatableView, SurfaceHolder.Callback, OnGestureListener{
 	
 	/*Used for detecting input*/
     GestureDetector gestureScanner;
@@ -20,6 +29,9 @@ public class ElephantView extends SurfaceView
     private static final int SWIPE_THRESHOLD_VELOCITY = 200;
 	
 	UpdateThread updateThread;
+	File file;
+	RandomAccessFile raf;
+	long rafIndex = 0;
 	
 	Background back;
 	Level level;
@@ -38,11 +50,19 @@ public class ElephantView extends SurfaceView
 	public ElephantView(Context context){
 		super(context);
 		getHolder().addCallback(this);
-		
-		 scorePaint = new Paint();
-	     scorePaint.setColor(Color.GREEN);
-	     scorePaint.setTextSize(14);
-		
+
+		file = new File(context.getFilesDir(), "eggList.out");
+		try {
+			raf = new RandomAccessFile(file, "rw");
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		scorePaint = new Paint();
+		scorePaint.setColor(Color.GREEN);
+		scorePaint.setTextSize(14);
+
 		gestureScanner = new GestureDetector(this);
 	}
 
@@ -143,6 +163,19 @@ public class ElephantView extends SurfaceView
 		level = new Level(getResources(), this.width, this.height);
 		elleph = new Creature(getResources());
 		
+		BitmapFactory.Options opt = new BitmapFactory.Options();
+		opt.inMutable = true;  //allows us access to pixel array later
+		opt.inScaled = false;
+		Bitmap bp = BitmapFactory.decodeResource(getResources(), R.drawable.birdcliff2,opt);
+		int p = 0; //used as index in following
+		for(Platform platform: level.platforms){
+			platform.thickness = height/24;
+			platform.changePlatform(bp, 1);
+			p++;
+			if(p%2!=0)platform.flip();
+		}
+				
+		
 		updateThread = new UpdateThread(this);
 		updateThread.setRunning(true);
 		updateThread.start();
@@ -151,8 +184,7 @@ public class ElephantView extends SurfaceView
 
 	@Override
 	public void surfaceDestroyed(SurfaceHolder arg0) {
-		// TODO Auto-generated method stub
-		
+		updateThread.setRunning(false);
 	}
 
 	public void updatePhysics() {
@@ -174,6 +206,16 @@ public class ElephantView extends SurfaceView
 		if(level.egg != null){
 			if(Collision.creatureProductCollision(elleph, level.egg)){
 				eggScore = eggScore + 1;
+				try {
+					raf.writeInt(level.egg.prim); 
+					raf.writeInt(level.egg.seco);
+					raf.seek(0 +8*rafIndex); //int takes 8 pointer offsets
+					elleph.setColors(raf.readInt(), raf.readInt());
+					rafIndex++;
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				level.egg = null;
 			}
 		}
@@ -190,19 +232,24 @@ public class ElephantView extends SurfaceView
 		
 	}
 	
-	protected void onDraw(Canvas c){
+	public void onDraw(Canvas c){
 		
 		back.drawBackground(c);
         scorePaint.setColor(Color.GREEN);
         proScore = level.upcounter;
         c.drawText(String.valueOf(proScore), 20, 20, scorePaint);
         scorePaint.setColor(Color.argb(255, 255, 175, 00));
-        c.drawText(String.valueOf(eggScore), width - 20, 20, scorePaint);
-		
-		level.draw(c);
+        c.drawText(Integer.toString(eggScore), width - 20, 20, scorePaint);
+        
+        
+        /*Debugging Purposes*/
+        if(level.egg!=null)c.drawText(String.valueOf(level.egg.prim), width- 150, 20, scorePaint);
+        c.drawText(Integer.toString(elleph.oldp), width - 150, 40, scorePaint);
+		c.drawText(file.getAbsolutePath(), width - 450, 60, scorePaint);
+        
 		//level.shiftUp();
-		
 		elleph.draw(c);
+		level.draw(c);
 	}
 	
 	

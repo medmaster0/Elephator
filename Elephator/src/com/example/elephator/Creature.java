@@ -35,8 +35,8 @@ public class Creature {
 	public boolean isLanded = false;
 	private float gravity = (float)0.2;
 	private Bitmap bmp;
-	private int prim, seco;
-	private int oldp, olds; //keeps track of the creature's color's
+	public int prim, seco;
+	public int oldp, olds; //keeps track of the creature's color's
 	
 	public Creature(Resources r){
 		/*Always Add the opt so we get a mutable bitmap that wwe can scale*/
@@ -96,6 +96,17 @@ public class Creature {
 				//the scalar coeffeiciet of width and height SCALE the sprite by that much
 		canvas.drawBitmap(bmp, src, dst, null);
 	}
+	
+	public void draw(Canvas canvas, float scale){
+		
+		int srcX = currentFrame * width;
+		int srcY = currentDir * height;
+		Rect src = new Rect(srcX, srcY, srcX + width, srcY + height);
+		Rect dst = new Rect((int)(x),(int)(y), 
+				(int)(x + (scale * r)), (int)(y + (scale * r)));
+				//the scalar coeffeiciet of width and height SCALE the sprite by that much
+		canvas.drawBitmap(bmp, src, dst, null);
+	}
 
 	//todo: maybe add a class containing this function
 	public void randomizeBmp(){
@@ -109,6 +120,31 @@ public class Creature {
 		while(prim == seco) {
 			prim = Color.argb(255, rnd.nextInt(256),rnd.nextInt(256),rnd.nextInt(256));
 		}
+		
+		/*Setup pixel buffer*/
+		int[] pixels = new int[this.bmp.getHeight()*this.bmp.getWidth()];
+		this.bmp.getPixels(pixels, 0, this.bmp.getWidth(), 0, 0, this.bmp.getWidth(), this.bmp.getHeight());
+			
+		/*Go through each pixel and change accordingly*/
+		for (int i=0; i<pixels.length; i++){
+			if(pixels[i] == this.oldp){
+				pixels[i] = prim;
+			} else if (pixels[i] == this.olds){
+				pixels[i] = seco;
+			}
+		    
+		}
+		this.bmp.setPixels(pixels, 0, this.bmp.getWidth(), 0, 0, this.bmp.getWidth(), 
+				this.bmp.getHeight());
+		this.olds = seco;
+		this.oldp = prim;
+	
+	}
+	
+	//todo: maybe add a class containing this function
+	public void setColors(int p, int s){
+		prim = p;
+		seco = s;
 		
 		/*Setup pixel buffer*/
 		int[] pixels = new int[this.bmp.getHeight()*this.bmp.getWidth()];
@@ -153,6 +189,34 @@ public class Creature {
 	public void setR(float r) {
 		this.r = r;
 	}
+	
+	/**Scales the image with the nearest neighbor filter:
+	 * Very pixelated block output
+	 * 
+	 * @param w :the width of new image in pixels
+	 * @param h: the height of the new image in   pixels
+	 */
+	public static void nearestNeighbor(Bitmap img, int w, int h){
+		/*Setup pixel buffer*/
+		int[] pixels = new int[img.getHeight()*img.getWidth()];
+		img.getPixels(pixels, 0, img.getWidth(), 0, 0, img.getWidth(), img.getHeight());
+		
+		int[] out = new int[w * h];
+		
+		float x_ratio = (float)img.getWidth() / (float)w;
+	    float y_ratio = (float)img.getHeight() / (float)h;
+	    float px, py;
+	    float i, j;
+	    for ( i =0 ;i<h;i++) {
+	      for ( j = 0;j<w;j++) {
+	        px = (float)Math.floor(j * x_ratio);
+	        py = (float)Math.floor(i * y_ratio);
+	        out[(int)(i*w)+(int)j] = pixels[(int)(Math.floor((py*img.getWidth())+px))] ;
+	      }
+	    }
+	    img.setPixels(out, 0, w, 0, 0, w, h);
+	    
+	 }
 	
 	public void move(int width, int height){
 		//gravity effects vy
