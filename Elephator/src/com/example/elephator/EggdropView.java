@@ -1,13 +1,28 @@
 package com.example.elephator;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Rect;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -25,13 +40,23 @@ public class EggdropView extends SurfaceView
     private static final int SWIPE_THRESHOLD_VELOCITY = 200;
     long timer; //used to screen taps
     long oldtime = 0;
+    boolean isEggRunning = false; //If we ar requesting an egg
+    
+    /*Used in HTTP Regex*/
+    Pattern emptyPattern = Pattern.compile("BAD");
+    Pattern colorPattern = Pattern.compile("([-+][0-9]*)([-+][0-9]*)iid([0-9]*)");
+    Matcher m = null;
     
     UpdateThread updateThread;
+    
+    Paint stashPaint;
+    String stashLow = null;
     
     Background2 back;
     Level level;
     Creature elleph;
     Egg egg = null;
+    Product pro = null;
     ArrayList<Egg> launchedEggs;
     ArrayList<Egg> landedEggs;
     
@@ -41,6 +66,10 @@ public class EggdropView extends SurfaceView
 		super(context);
 		getHolder().addCallback(this);
 		
+		stashPaint = new Paint();
+		stashPaint.setColor(Color.GREEN);
+		stashPaint.setTextSize(14);
+		
 		gestureScanner = new GestureDetector(this);
 	}
 
@@ -48,15 +77,11 @@ public class EggdropView extends SurfaceView
 		timer = System.currentTimeMillis();
 		if((timer-oldtime)<500)return gestureScanner.onTouchEvent(e);
 		
-		if(egg != null){
-			launchedEggs.add(egg);
-			if(launchedEggs.size()>5)launchedEggs.remove(0);
+		//Proceed with Launching of Egg and New Egg
+		if(isEggRunning == false){ //Preven multiple runs
+				EggRun eggrun = new EggRun();
+				new Thread(eggrun).start();
 		}
-		egg = new Egg(getResources());
-		egg.x = elleph.x - elleph.r/2;
-		egg.y = elleph.y + elleph.r/2;
-		egg.vx = -5 + (int)(Math.random()*5);
-		egg.vy = -5 + (int)(Math.random()*10);
 		
 		oldtime = timer;
 		return gestureScanner.onTouchEvent(e);
@@ -150,8 +175,19 @@ public class EggdropView extends SurfaceView
 		elleph.draw(c, 1);
 		level.draw(c);
 		if(egg!=null)egg.draw(c);
+		if(pro!=null)pro.draw(c);
+		try{
 		for(Egg eggy : launchedEggs)eggy.draw(c);
+		}catch(Exception e){
+			//do nothing
+		}
+		
+		
 		for(Egg eggy: landedEggs)eggy.draw(c);
+		
+		//Print stash low if applicable
+		if(stashLow != null)c.drawText(stashLow, 0, 60, stashPaint);
+				
 	}
 	
 	public void updatePhysics(){
@@ -170,8 +206,15 @@ public class EggdropView extends SurfaceView
 //			}
 //
 //		}
+		//product stuff
+		if(pro!=null){
+			pro.move(width, height);
+			if(pro.y > height)pro = null;
+		}
+		
 		Iterator<Egg> itr = launchedEggs.listIterator();
 		if(!itr.hasNext())return;
+		try{
 		while(itr.hasNext()){
 			Egg eggy = itr.next();
 			eggy.move(width, height);
@@ -183,10 +226,14 @@ public class EggdropView extends SurfaceView
 				if(landedEggs.size()>20)landedEggs.remove(0);
 				HatchRun hatchrun = new HatchRun(eggy);
 				new Thread(hatchrun).start();
-			}
-			
+			}	
+		}
+		}
+		catch(Exception e){
+			return; //just return the routine. Updating physics isn't crucial?
 		}
 		
+
 		
 	}
 	
@@ -200,6 +247,67 @@ public class EggdropView extends SurfaceView
 			return;
 		}
 		
+	}
+	
+	public class EggRun implements Runnable{
+
+		@Override
+		public void run() {
+			int prim;
+			int seco;
+			int iid;
+			isEggRunning = true; //set this true in case request takes long
+			if(egg != null){
+				launchedEggs.add(egg);
+				if(launchedEggs.size()>5)launchedEggs.remove(0);
+			}
+			String colors = getData();
+			/*Check to see if egg stash is empty*/
+			m = emptyPattern.matcher(colors);
+			if(m.matches()){
+				stashLow = "Egg Stash is Empty\n Help Get More!!";
+				return;
+			}
+			
+			/*Otherwise, Create new egg*/
+			m = colorPattern.matcher(colors);
+			if(m.matches()){
+				stashLow = null;
+				prim = Integer.parseInt(m.group(1));
+				seco = Integer.parseInt(m.group(2));
+				iid = Integer.parseInt(m.group(3));
+				if(iid == 1){
+					egg = new Egg(getResources());
+					egg.setColors(prim, seco);
+					egg.x = elleph.x - elleph.r/2;
+					egg.y = elleph.y + elleph.r/2;
+					egg.vx = -5 + (int)(Math.random()*5);
+					egg.vy = -5 + (int)(Math.random()*10);
+				}
+				if(iid == 0){
+					pro = new Product(getResources());
+					pro.setColors(prim, seco);
+					pro.vy = -5 + (int)(Math.random()*10);
+				}
+			}
+			isEggRunning = false;
+			
+		}
+		
+	}
+	
+	public String getData(){
+		// Create a new HttpClient and Get Header
+	    HttpClient httpclient = new DefaultHttpClient();
+	    HttpGet httpget = new HttpGet("http://elephator.tk:8888/get");
+	    HttpResponse response;
+	    String colors = "Empty";
+	    try{
+	    	response = httpclient.execute(httpget);
+	    	BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "UTF-8"));
+	    	colors = reader.readLine();
+	    }catch (Exception e){}
+		return colors;
 	}
 	
 

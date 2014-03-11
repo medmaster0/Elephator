@@ -10,6 +10,7 @@ public class Level {
 	public int numPlats = 6;
 	public int width, height; //width and height of the screen
 	Egg egg = null;
+	Product pro = null;
 	
 	int upcounter;
 	int downcounter;
@@ -71,70 +72,10 @@ public class Level {
 	
 	public void draw(Canvas canvas){
 		if(egg!=null)egg.draw(canvas);
+		if(pro!=null)pro.draw(canvas);
 		for(Platform plat: platforms){
 			plat.drawPlatform(canvas);
 			plat.tickTock();
-		}
-		
-	}
-	
-	/**
-	 * Causes the entire level
-	 * to shift a unit down
-	 */
-	public void shiftDown() {
-		if(egg != null){
-			++egg.y;
-			if(egg.y>height)egg.y = 0;
-		}
-		for(Platform plat: platforms){
-			plat.y = ++plat.y;
-			if(plat.y > height){
-				plat.y = 0;
-				downcounter++;
-			}
-			
-		}
-	}
-	
-	/**
-	 * Causes the entire level
-	 * to shift a unit down
-	 */
-	public void shiftDown(int y) {
-		if(egg != null){
-			egg.y = egg.y + y;
-			if(egg.y>height)egg.y = 0;
-		}
-		for(Platform plat: platforms){
-			plat.y = y+plat.y;
-			if(plat.y > height){
-				plat.y = 0;
-				downcounter++;
-			}
-			
-		}
-	}
-	
-	/**
-	 * Causes the entire level
-	 * to shift a unit up
-	 */
-	public void shiftUp(Resources r) {
-		if(egg != null){
-			--egg.y;
-			if(egg.y<0)egg = null; //destroy egg if it goeas over the top
-		}
-		for(Platform plat: platforms){
-			plat.y = --plat.y;
-			if(plat.y < 0){
-				upcounter++;
-				plat.y = height;
-				if(upcounter%5 == 4){
-					if(egg==null)egg = new Egg(r,plat.x,plat.y-egg.r);
-				}
-			}
-			
 		}
 		
 	}
@@ -146,15 +87,33 @@ public class Level {
 	public void shiftUp(int y, Resources r) {
 		if(egg != null){
 			egg.y = egg.y - y;
-			if(egg.y<0)egg = null; //destroy egg if it goeas over the top
+			if(egg.y<0)egg = null; //destroy egg if it goes over the top
+			if(egg.y>height)egg = null; //destroy egg if it goes under the bottom
+		}
+		if(pro!=null){
+			pro.y = pro.y - y;
+			if(pro.y>height){
+				//pro = null; //destroy pro if it goes under the bottom
+				pro.y = pro.y-height;
+			}
+			if(pro.y<0)pro.y = height + pro.y; //rturn pro if it goes over the top
 		}
 		for(Platform plat: platforms){
 			plat.y = plat.y-y;
 			if(plat.y < 0){
-				plat.y = height;
+				plat.y = height + (plat.y); //correct the reverse over compensation
 				upcounter++;
+				/* Possibly Generate an egg*/
 				if(upcounter%5 == 4){ 
 					if(egg==null)egg = new Egg(r, plat.x, plat.y-egg.r);
+				}
+			}
+			if(plat.y>height){
+				plat.y = plat.y - height;  //correct the over compesation
+				downcounter++;
+				/* Possibly Generate a prod*/
+				if(downcounter%5 == 4){ 
+					if(pro==null)pro = new Product(r, plat.x, plat.y-pro.r);
 				}
 			}
 		}

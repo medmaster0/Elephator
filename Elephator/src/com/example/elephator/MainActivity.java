@@ -3,18 +3,27 @@ package com.example.elephator;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.RelativeLayout;
 
 public class MainActivity extends Activity {
 
 	ElephantView elephantView;
+
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		RelativeLayout layout = new RelativeLayout(this);
+		
 		elephantView = new ElephantView(this);
-		setContentView(elephantView);
+		layout.addView(elephantView);
+		
+		setContentView(layout);
 	}
 	
 	@Override

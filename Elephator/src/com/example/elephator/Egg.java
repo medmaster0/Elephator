@@ -27,8 +27,7 @@ public class Egg extends Product {
 		this.olds = Color.WHITE;
 		this.randomizeBmp();
 		
-		
-		
+		iid = 1;
 	}
 
 	public Egg(Resources r,float x, float y){
@@ -47,9 +46,7 @@ public class Egg extends Product {
 		this.oldp = Color.BLACK;
 		this.olds = Color.WHITE;
 		this.randomizeBmp();
-		
-		
-		
+		iid = 1;
 	}
 	
 	public void hatch(){
@@ -98,22 +95,6 @@ public class Egg extends Product {
 		this.vy= 0;
 		this.vx = 0;
 		this.gravity = 0;
-	}
-	
-	public void move(int width, int height){
-		//gravity effects vy
-		vy = vy + gravity; 
-		
-		//set limits for terminal velocity
-		//if(vy > 10)vy = 10;
-	    //if(vy < -10)vy = -10;
-		
-	    y = y + vy;
-		x = x + vx;
-		if((x+r)>width|(x<0)){
-			vx = -vx; //bounce off walls
-		}
-		
 	}
 	
 	public void hatchThreadFast(){

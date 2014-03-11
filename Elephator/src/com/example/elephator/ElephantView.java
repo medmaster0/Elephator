@@ -4,6 +4,17 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+
+import com.example.elephator.EggdropView.HatchRun;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -32,6 +43,9 @@ public class ElephantView extends SurfaceView
 	File file;
 	RandomAccessFile raf;
 	long rafIndex = 0;
+	
+	long timer = 0;
+	long oldtime = 0;
 	
 	Background back;
 	Level level;
@@ -70,6 +84,10 @@ public class ElephantView extends SurfaceView
 	@Override 
     public boolean onTouchEvent(MotionEvent e) {
     	
+//		timer = System.currentTimeMillis();
+//		if((timer-oldtime)<200)return gestureScanner.onTouchEvent(e);
+//		oldtime = timer;
+		
     	/*The Bully system :))))*/
 		//llc.setxPos(llc.getxPos() + (e.getRawX() - llc.getxPos())/followRes);
 		//llc.setyPos(llc.getyPos() + (e.getRawY() - llc.getyPos())/followRes);
@@ -78,7 +96,6 @@ public class ElephantView extends SurfaceView
     	}else{
     		elleph.vx = -Math.abs(elleph.vx);
     	}
-    	
     	
 		return gestureScanner.onTouchEvent(e);
     }
@@ -101,6 +118,7 @@ public class ElephantView extends SurfaceView
 		if(e1.getY() - e2.getY() > SWIPE_MIN_DISTANCE && 
                Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY) {
 			//From Bottom to Top
+			elleph.jump();
 			return true;
 		}  else if (e2.getY() - e1.getY() > SWIPE_MIN_DISTANCE && 
                Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY) {
@@ -136,7 +154,6 @@ public class ElephantView extends SurfaceView
 	@Override
 	public void onShowPress(MotionEvent arg0) {
 		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
@@ -166,10 +183,13 @@ public class ElephantView extends SurfaceView
 		BitmapFactory.Options opt = new BitmapFactory.Options();
 		opt.inMutable = true;  //allows us access to pixel array later
 		opt.inScaled = false;
-		Bitmap bp = BitmapFactory.decodeResource(getResources(), R.drawable.birdcliff2,opt);
+		Bitmap bp = null; //used as a holder for the following bitmap factories
+		bp = BitmapFactory.decodeResource(getResources(), R.drawable.cap, opt);
+		elleph.giveItem(bp);
+		bp = BitmapFactory.decodeResource(getResources(), R.drawable.purplog,opt);
 		int p = 0; //used as index in following
 		for(Platform platform: level.platforms){
-			platform.thickness = height/24;
+			platform.thickness = height/30;
 			platform.changePlatform(bp, 1);
 			p++;
 			if(p%2!=0)platform.flip();
@@ -206,17 +226,19 @@ public class ElephantView extends SurfaceView
 		if(level.egg != null){
 			if(Collision.creatureProductCollision(elleph, level.egg)){
 				eggScore = eggScore + 1;
-				try {
-					raf.writeInt(level.egg.prim); 
-					raf.writeInt(level.egg.seco);
-					raf.seek(0 +8*rafIndex); //int takes 8 pointer offsets
-					elleph.setColors(raf.readInt(), raf.readInt());
-					rafIndex++;
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				DataRun datarun = new DataRun(level.egg);
+				new Thread(datarun).start();
 				level.egg = null;
+			}
+		}
+		
+		//Check to see if elephant has gotten an product
+		if(level.pro != null){
+			if(Collision.creatureProductCollision(elleph, level.pro)){
+				proScore = proScore + 1;
+				DataRun datarun = new DataRun(level.pro);
+				new Thread(datarun).start();
+				level.pro = null;
 			}
 		}
 
@@ -228,33 +250,80 @@ public class ElephantView extends SurfaceView
 //		}
 		/*The Bully system :))))*/
 		//llc.setyPos(llc.getyPos() + (e.getRawY() - llc.getyPos())/followRes);
-		level.shiftUp((int)((elleph.y - (width/2.0))/followRes), getResources());
-		
+		//level.shiftUp((int)((elleph.y - (width/2.0))/followRes), getResources());
+		level.shiftUp((int)((elleph.y - (height/3.3))/followRes), getResources());
 	}
 	
 	public void onDraw(Canvas c){
 		
 		back.drawBackground(c);
         scorePaint.setColor(Color.GREEN);
-        proScore = level.upcounter;
-        c.drawText(String.valueOf(proScore), 20, 20, scorePaint);
+        c.drawText(String.valueOf(level.upcounter), 20, 20, scorePaint);
+        c.drawText(String.valueOf(level.downcounter), 20, 40, scorePaint);
         scorePaint.setColor(Color.argb(255, 255, 175, 00));
         c.drawText(Integer.toString(eggScore), width - 20, 20, scorePaint);
+        c.drawText(Integer.toString(proScore), width - 20, 40, scorePaint);
         
         
         /*Debugging Purposes*/
         if(level.egg!=null)c.drawText(String.valueOf(level.egg.prim), width- 150, 20, scorePaint);
-        c.drawText(Integer.toString(elleph.oldp), width - 150, 40, scorePaint);
-		c.drawText(file.getAbsolutePath(), width - 450, 60, scorePaint);
+        if(level.pro!=null)c.drawText(Double.toString(level.pro.width), width - 150, 40, scorePaint);
         
 		//level.shiftUp();
 		elleph.draw(c);
 		level.draw(c);
 	}
 	
+	public class DataRun implements Runnable{
+
+		Product pro;
+		public DataRun(Product pro){
+			this.pro = pro;
+		}
+		
+		@Override
+		public void run() {
+			postData(pro);
+			//saveData(prim,seco);
+		}
+		
+	}
 	
+	public void postData(Product pro) {
+	    // Create a new HttpClient and Post Header
+	    HttpClient httpclient = new DefaultHttpClient();
+	    HttpPost httppost = new HttpPost("http://elephator.tk:8888/");
+
+	    try {
+	        // Add your data
+	        ArrayList<BasicNameValuePair> nameValuePairs = new ArrayList<BasicNameValuePair>(2);
+	        nameValuePairs.add(new BasicNameValuePair("prim", String.valueOf(pro.prim)));
+	        nameValuePairs.add(new BasicNameValuePair("seco", String.valueOf(pro.seco)));
+	        nameValuePairs.add(new BasicNameValuePair("iid", String.valueOf(pro.iid)));
+	        
+	        httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+
+	        // Execute HTTP Post Requestd
+	        httpclient.execute(httppost);
+
+	    } catch (ClientProtocolException e) {
+	        // TODO Auto-generated catch block
+	    } catch (IOException e) {
+	        // TODO Auto-generated catch block
+	    }
+	}
 	
-	
-	
+	public void saveData(int prim, int seco){
+		try {
+			raf.writeInt(prim); 
+			raf.writeInt(seco);
+			raf.seek(0 +8*rafIndex); //int takes 8 pointer offsets
+			elleph.setColors(raf.readInt(), raf.readInt());
+			rafIndex++;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}	
 	
 }

@@ -32,6 +32,8 @@ public class Product {
 	public int prim, seco;
 	public int width, height;
 	
+	public int iid;
+	
 	public Product(Resources r){
 		
 		/*Always Add the opt so we get a mutable bitmap that wwe can scale*/
@@ -44,6 +46,23 @@ public class Product {
 		this.width = bmp.getWidth() / bmpCols;
 		this.height = bmp.getHeight() /  bmpRows;
 		randomizeBmp(); 
+		iid = 0;
+	}
+	
+	public Product(Resources r,float x, float y){
+		
+		this.x = x;
+		this.y = y;
+		/*Always Add the opt so we get a mutable bitmap that wwe can scale*/
+		BitmapFactory.Options opt = new BitmapFactory.Options();
+        opt.inMutable = true;
+        opt.inScaled = false;
+		bmp = BitmapFactory.decodeResource(r, R.drawable.product, opt);
+		this.oldp = Color.BLACK;
+		this.olds = Color.WHITE;
+		this.width = bmp.getWidth() / bmpCols;
+		this.height = bmp.getHeight() /  bmpRows;
+		this.randomizeBmp();
 	}
 	
 	public void draw(Canvas canvas){
@@ -124,7 +143,45 @@ public class Product {
 		this.r = r;
 	}
 
+	public void setColors(int p, int s){
+		prim = p;
+		seco = s;
+		
+		/*Setup pixel buffer*/
+		int[] pixels = new int[this.bmp.getHeight()*this.bmp.getWidth()];
+		this.bmp.getPixels(pixels, 0, this.bmp.getWidth(), 0, 0, this.bmp.getWidth(), this.bmp.getHeight());
+			
+		/*Go through each pixel and change accordingly*/
+		for (int i=0; i<pixels.length; i++){
+			if(pixels[i] == this.oldp){
+				pixels[i] = prim;
+			} else if (pixels[i] == this.olds){
+				pixels[i] = seco;
+			}
+		    
+		}
+		this.bmp.setPixels(pixels, 0, this.bmp.getWidth(), 0, 0, this.bmp.getWidth(), 
+				this.bmp.getHeight());
+		this.olds = seco;
+		this.oldp = prim;
 	
+	}
+	
+	public void move(int width, int height){
+		//gravity effects vy
+		vy = vy + gravity; 
+		
+		//set limits for terminal velocity
+		//if(vy > 10)vy = 10;
+	    //if(vy < -10)vy = -10;
+		
+	    y = y + vy;
+		x = x + vx;
+		if((x+r)>width|(x<0)){
+			vx = -vx; //bounce off walls
+		}
+		
+	}
 	
 
 }

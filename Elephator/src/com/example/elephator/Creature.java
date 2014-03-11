@@ -1,5 +1,6 @@
 package com.example.elephator;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 import android.graphics.Bitmap;
@@ -21,7 +22,6 @@ public class Creature {
 	private int currentFrame = 1; //collumn in sprite sheet
 	private int currentDir = 0; //row in sprite sheet
 	
-
 	private int count = 0; //for animation speed (very hacky)
 	/*general fields*/
 	public int width; //width of individual sprite (frame)
@@ -33,10 +33,12 @@ public class Creature {
 	public float vx = 4;
 	public float vy = 4;
 	public boolean isLanded = false;
-	private float gravity = (float)0.2;
+	private float gravity = (float)0.4;
 	private Bitmap bmp;
 	public int prim, seco;
 	public int oldp, olds; //keeps track of the creature's color's
+	
+	public ArrayList<Item> items = new ArrayList<Item>();
 	
 	public Creature(Resources r){
 		/*Always Add the opt so we get a mutable bitmap that wwe can scale*/
@@ -95,6 +97,12 @@ public class Creature {
 				(int)(x + (1.5 * r)), (int)(y + (1.5 * r)));
 				//the scalar coeffeiciet of width and height SCALE the sprite by that much
 		canvas.drawBitmap(bmp, src, dst, null);
+		/*draw items*/
+		if(items != null){
+			for(Item i: items){
+				i.draw(canvas, this.x, this.y, this.currentDir);
+			}
+		}
 	}
 	
 	public void draw(Canvas canvas, float scale){
@@ -106,6 +114,12 @@ public class Creature {
 				(int)(x + (scale * r)), (int)(y + (scale * r)));
 				//the scalar coeffeiciet of width and height SCALE the sprite by that much
 		canvas.drawBitmap(bmp, src, dst, null);
+		/*draw items*/
+		if(items != null){
+			for(Item i: items){
+				i.draw(canvas, this.x, this.y, this.currentDir);
+			}
+		}
 	}
 
 	//todo: maybe add a class containing this function
@@ -232,6 +246,14 @@ public class Creature {
 			vx = -vx; //bounce off walls
 		}
 		
+	}
+	
+	public void giveItem(Bitmap bmp){
+		items.add(new Item(bmp));
+	}
+	
+	public void jump(){
+		vy = -8;
 	}
 	
 	
