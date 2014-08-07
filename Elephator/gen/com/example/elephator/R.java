@@ -30,14 +30,16 @@ public final class R {
         public static final int eleph=0x7f020006;
         public static final int elephantbiped=0x7f020007;
         public static final int fallguy=0x7f020008;
-        public static final int flyguy=0x7f020009;
-        public static final int ic_launcher=0x7f02000a;
-        public static final int ladder=0x7f02000b;
-        public static final int lava=0x7f02000c;
-        public static final int platform2=0x7f02000d;
-        public static final int product=0x7f02000e;
-        public static final int purplog=0x7f02000f;
-        public static final int sunsetblvd=0x7f020010;
+        public static final int fish=0x7f020009;
+        public static final int flag=0x7f02000a;
+        public static final int flyguy=0x7f02000b;
+        public static final int ic_launcher=0x7f02000c;
+        public static final int ladder=0x7f02000d;
+        public static final int lava=0x7f02000e;
+        public static final int platform2=0x7f02000f;
+        public static final int product=0x7f020010;
+        public static final int purplog=0x7f020011;
+        public static final int sunsetblvd=0x7f020012;
     }
     public static final class id {
         public static final int action_eggdrop=0x7f080001;
@@ -75,7 +77,6 @@ public final class R {
         AppBaseTheme from BOTH res/values/styles.xml and
         res/values-v11/styles.xml on API 14+ devices.
     
- API 14 theme customizations can go here. 
          */
         public static final int AppBaseTheme=0x7f060000;
         /**  Application theme. 

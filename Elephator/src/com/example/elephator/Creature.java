@@ -1,5 +1,13 @@
 package com.example.elephator;
 
+/*TODO
+ * 
+ * 
+ * 
+ * 
+ */
+
+
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -17,9 +25,9 @@ import android.content.res.Resources;
 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
 public class Creature {
 	/*take care of animation*/
-	private int bmpRows = 2;
-	private int bmpCols = 4;
-	private int currentFrame = 1; //collumn in sprite sheet
+	protected int bmpRows = 2;
+	protected int bmpCols = 4;
+	protected int currentFrame = 1; //collumn in sprite sheet
 	private int currentDir = 0; //row in sprite sheet
 	
 	private int count = 0; //for animation speed (very hacky)
@@ -34,12 +42,19 @@ public class Creature {
 	public float vy = 4;
 	public boolean isLanded = false;
 	private float gravity = (float)0.4;
-	private Bitmap bmp;
+	protected Bitmap bmp;
 	public int prim, seco;
 	public int oldp, olds; //keeps track of the creature's color's
 	
 	public ArrayList<Item> items = new ArrayList<Item>();
-	
+	float offsetx; //take care of drawing flag right
+	float offsety; //take care of drawing flag right
+	 
+	//Dimensions of outside view
+	public int screenWidth = 540;
+	public int screenHeight = 850;
+
+	//This constructor was made for a 40x840 screen
 	public Creature(Resources r){
 		/*Always Add the opt so we get a mutable bitmap that wwe can scale*/
 		BitmapFactory.Options opt = new BitmapFactory.Options();
@@ -54,7 +69,51 @@ public class Creature {
 		this.vy = -5 + (int)(Math.random()*10); //random number between -5 and 5
 		this.x = 100 + (int)(Math.random()*100);
 		this.y = 100 + (int)(Math.random()*100);
+		
+		this.offsetx = (float) (width * 0.75); //with 540x860 it equals 24
+		this.offsety = height/2; //with 54x850 it equals 16
+		
 		randomizeBmp();
+	}
+	
+	/**Constructor that will create creature aware of screen dimensions
+	 * for size and movement
+	 */
+	public Creature(Resources r, int width, int height){
+		/*Always Add the opt so we get a mutable bitmap that wwe can scale*/
+		BitmapFactory.Options opt = new BitmapFactory.Options();
+        opt.inMutable = true;
+        opt.inScaled = false;
+		bmp = BitmapFactory.decodeResource(r, R.drawable.elephantbiped, opt);
+		this.oldp = Color.BLACK;
+		this.olds = Color.WHITE;
+		this.width = bmp.getWidth() / bmpCols;
+		this.height = bmp.getHeight() / bmpRows;
+		this.x = 100 + (int)(Math.random()*100);
+		this.y = 100 + (int)(Math.random()*100);
+		
+		this.screenHeight = height;
+		this.screenWidth = width;
+		
+		/*
+		 * We calculated these ratios by using a 540x850 screen
+		 * with a target of getting the same ratio with the values in 
+		 * the field definitions (before constructor)
+		 * 
+		 */
+		this.r = (float) (height/17.708); //magic ratio		
+		//Again a magic ratio
+		//Random number between negative ratio to positive ratio
+		this.vy = (float) ((-screenHeight/170.0) + (Math.random()*((2.0 * screenHeight)/170.0))); 
+		this.vx = (float) ((-screenWidth/108.0) + (Math.random()*((2.0 * screenWidth)/108.0))); 
+		this.gravity = (float)(screenHeight/2125.0);
+		
+		this.offsetx = (float) (screenWidth/22.5);
+		this.offsety = (float) (screenHeight/53.125);
+
+		
+		randomizeBmp();
+		
 	}
 
 	public float getxPos() {
@@ -77,6 +136,13 @@ public class Creature {
 	public void update(){
 		if(count > 15){
 		currentFrame = (++currentFrame % bmpCols); //iterate to next frame
+		//Take care of item animation
+		if(items != null){
+			for(Item i: items){
+				i.currentFrame = (++i.currentFrame % i.bmpCols);
+			}
+		}
+		
 		count = 0;
 		}else{
 			count++;
@@ -90,6 +156,18 @@ public class Creature {
 
 	public void draw(Canvas canvas){
 		
+		/*draw items*/
+
+		if(items != null){
+			for(Item i: items){
+				if(currentDir == 0){
+					i.draw(canvas, this.x - offsetx, this.y - offsety, this.currentDir);
+				}else{
+					i.draw(canvas, this.x + offsetx, this.y - offsety, this.currentDir);
+				}
+			}
+		}
+		
 		int srcX = currentFrame * width;
 		int srcY = currentDir * height;
 		Rect src = new Rect(srcX, srcY, srcX + width, srcY + height);
@@ -97,12 +175,7 @@ public class Creature {
 				(int)(x + (1.5 * r)), (int)(y + (1.5 * r)));
 				//the scalar coeffeiciet of width and height SCALE the sprite by that much
 		canvas.drawBitmap(bmp, src, dst, null);
-		/*draw items*/
-		if(items != null){
-			for(Item i: items){
-				i.draw(canvas, this.x, this.y, this.currentDir);
-			}
-		}
+
 	}
 	
 	public void draw(Canvas canvas, float scale){
@@ -238,7 +311,7 @@ public class Creature {
 		
 		//set limits for terminal velocity
 		if(vy > 10)vy = 10;
-	    if(vy < -10)vy = -10;
+	    if(vy < -20)vy = -20;
 		
 	    y = y + vy;
 		x = x + vx;
@@ -249,14 +322,17 @@ public class Creature {
 	}
 	
 	public void giveItem(Bitmap bmp){
-		items.add(new Item(bmp));
+		items.add(new Item(bmp, screenWidth, screenHeight));
 	}
 	
 	public void jump(){
 		vy = -8;
 	}
 	
-	
+	public void randomizeVx(){
+		//See second constructor thataccepts width and height for explantion of calculations
+		this.vx = (float) ((-screenWidth/108.0) + (Math.random()*((2.0 * screenWidth)/108.0))); 
+	}
 	
 
 }

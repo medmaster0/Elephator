@@ -87,8 +87,10 @@ public class Level {
 	public void shiftUp(int y, Resources r) {
 		if(egg != null){
 			egg.y = egg.y - y;
-			if(egg.y<0)egg = null; //destroy egg if it goes over the top
-			if(egg.y>height)egg = null; //destroy egg if it goes under the bottom
+			if(egg.y<0)	egg = null; //destroy egg if it goes over the top
+			if(egg != null){ //if egg hasn't been destroyed from previous line
+				if(egg.y>height)egg = null; //destroy egg if it goes under the bottom
+			}
 		}
 		if(pro!=null){
 			pro.y = pro.y - y;

@@ -107,7 +107,7 @@ public class ElephantView extends SurfaceView
                 Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
 			//From Right to Left
 			elleph.randomizeBmp();
-			elleph.vx = -5 + (int)(Math.random()*10); //random number between -5 and 5
+			elleph.randomizeVx();
 			return true;
 		}  else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE &&
                 Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
@@ -178,13 +178,16 @@ public class ElephantView extends SurfaceView
 		/*Initialize*/
 		back = new Background(getResources(), this.width, this.height);
 		level = new Level(getResources(), this.width, this.height);
-		elleph = new Creature(getResources());
+		elleph = new Creature(getResources(), this.width, this.height);
+		
+		//set product's static variable r to correct magic ratio for variable dimensions
+		Egg.r = (float) (height/26.5635);
 		
 		BitmapFactory.Options opt = new BitmapFactory.Options();
 		opt.inMutable = true;  //allows us access to pixel array later
 		opt.inScaled = false;
 		Bitmap bp = null; //used as a holder for the following bitmap factories
-		bp = BitmapFactory.decodeResource(getResources(), R.drawable.cap, opt);
+		bp = BitmapFactory.decodeResource(getResources(), R.drawable.flag, opt);
 		elleph.giveItem(bp);
 		bp = BitmapFactory.decodeResource(getResources(), R.drawable.purplog,opt);
 		int p = 0; //used as index in following
@@ -266,8 +269,8 @@ public class ElephantView extends SurfaceView
         
         
         /*Debugging Purposes*/
-        if(level.egg!=null)c.drawText(String.valueOf(level.egg.prim), width- 150, 20, scorePaint);
-        if(level.pro!=null)c.drawText(Double.toString(level.pro.width), width - 150, 40, scorePaint);
+        c.drawText(String.valueOf(width), width- 150, 20, scorePaint);
+        c.drawText(String.valueOf(height), width - 150, 40, scorePaint);
         
 		//level.shiftUp();
 		elleph.draw(c);
@@ -292,7 +295,7 @@ public class ElephantView extends SurfaceView
 	public void postData(Product pro) {
 	    // Create a new HttpClient and Post Header
 	    HttpClient httpclient = new DefaultHttpClient();
-	    HttpPost httppost = new HttpPost("http://elephator.tk:8888/");
+	    HttpPost httppost = new HttpPost("http://slymi.xen.prgmr.com:8888/get");
 
 	    try {
 	        // Add your data

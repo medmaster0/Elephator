@@ -10,14 +10,14 @@ import android.graphics.Rect;
 public class Item {
 
 	/*take care of animation*/
-	private int bmpRows = 2;
-	private int bmpCols = 1;
-	private int currentFrame = 0; //collumn in sprite sheet
-	private int currentDir = 0; //row in sprite sheet
+	public int bmpRows = 2;
+	public int bmpCols = 4;
+	public int currentFrame = 0; //collumn in sprite sheet
+	public int currentDir = 0; //row in sprite sheet
 	
 	public int width; //width of individual sprite (frame)
 	public int height; //height of individual sprite (frame)
-	public int r = 48;
+	public float r = 48;
 	public Bitmap bmp;
 	public int prim, seco;
 	public int oldp, olds; //keeps track of the creature's color's
@@ -31,6 +31,21 @@ public class Item {
 		this.height = bmp.getHeight() / bmpRows;
 		randomizeBmp();
 	}
+	
+	/** Constructor that's aware of it's ouside dimensions
+	 * 
+	 */
+	public Item(Bitmap bmp, int width, int height){
+		this.bmp = bmp;
+		this.oldp = Color.BLACK;
+		this.olds = Color.WHITE;
+		this.width = bmp.getWidth() / bmpCols;
+		this.height = bmp.getHeight() / bmpRows;
+		randomizeBmp();
+		
+		this.r = (float) (height/17.708); //magic ratio	
+	}
+	
 	
 	public void draw(Canvas canvas, float x, float y, int currentDir){
 		

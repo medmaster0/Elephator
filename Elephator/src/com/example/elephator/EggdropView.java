@@ -55,6 +55,7 @@ public class EggdropView extends SurfaceView
     Background2 back;
     Level level;
     Creature elleph;
+    Fish fis = null;
     Egg egg = null;
     Product pro = null;
     ArrayList<Egg> launchedEggs;
@@ -150,6 +151,7 @@ public class EggdropView extends SurfaceView
 		level.platforms[1].width = bp.getWidth();
 		level.platforms[1].bmpCols = 1;
 		level.platforms[1].thickness = height - level.platforms[1].y; //stretch thickness to bottom of screen
+		level.platforms[1].length = (int)((2.0/3.0)*width);
 		
 		elleph = new Creature(getResources());
 		elleph.x = level.platforms[0].x;
@@ -176,12 +178,12 @@ public class EggdropView extends SurfaceView
 		level.draw(c);
 		if(egg!=null)egg.draw(c);
 		if(pro!=null)pro.draw(c);
+		if(fis!=null)fis.draw(c,1);
 		try{
 		for(Egg eggy : launchedEggs)eggy.draw(c);
 		}catch(Exception e){
 			//do nothing
 		}
-		
 		
 		for(Egg eggy: landedEggs)eggy.draw(c);
 		
@@ -206,6 +208,11 @@ public class EggdropView extends SurfaceView
 //			}
 //
 //		}
+		//fish stuff
+		if(fis!=null){
+			fis.move(width, height);
+			if(fis.y>height)fis=null;
+		}
 		//product stuff
 		if(pro!=null){
 			pro.move(width, height);
@@ -288,6 +295,13 @@ public class EggdropView extends SurfaceView
 					pro = new Product(getResources());
 					pro.setColors(prim, seco);
 					pro.vy = -5 + (int)(Math.random()*10);
+					pro.x = 0 + (int)(Math.random()*width);
+					if(fis==null){
+						fis=new Fish(getResources());
+						fis.x = 0 + (int)(Math.random()*width);
+						fis.y = height;
+						fis.vy = (int)(-10) - (int)(Math.random()*10); //random number between -5 and 5
+					}
 				}
 			}
 			isEggRunning = false;
@@ -299,7 +313,7 @@ public class EggdropView extends SurfaceView
 	public String getData(){
 		// Create a new HttpClient and Get Header
 	    HttpClient httpclient = new DefaultHttpClient();
-	    HttpGet httpget = new HttpGet("http://elephator.tk:8888/get");
+	    HttpGet httpget = new HttpGet("http://slymi.xen.prgmr.com:8888/get");
 	    HttpResponse response;
 	    String colors = "Empty";
 	    try{
@@ -307,6 +321,7 @@ public class EggdropView extends SurfaceView
 	    	BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "UTF-8"));
 	    	colors = reader.readLine();
 	    }catch (Exception e){}
+	    System.out.println(colors);
 		return colors;
 	}
 	

@@ -30,7 +30,7 @@ public class Product {
 	public static float r = 32;
 	public int oldp, olds;
 	public int prim, seco;
-	public int width, height;
+	public int width, height; //height and width of bitmap
 	
 	public int iid;
 	
@@ -70,7 +70,7 @@ public class Product {
 		int srcY = currentDir * height;
 		Rect src = new Rect(srcX, srcY, srcX + width, srcY + height);
 		Rect dst = new Rect((int)(x),(int)(y), 
-				(int)(x + (1 * width)), (int)(y + (1 * height)));
+				(int)(x + (1 * r)), (int)(y + (1 * r)));
 				//the scalar coeffeiciet of width and height SCALE the sprite by that much
 		canvas.drawBitmap(bmp, src, dst, null);
 		
@@ -81,7 +81,7 @@ public class Product {
 		int srcY = currentDir * height;
 		Rect src = new Rect(srcX, srcY, srcX + width, srcY + height);
 		Rect dst = new Rect((int)(x),(int)(y), 
-				(int)(x + (scale * width)), (int)(y + (scale * height)));
+				(int)(x + (scale * r)), (int)(y + (scale * r)));
 				//the scalar coeffeiciet of width and height SCALE the sprite by that much
 		canvas.drawBitmap(bmp, src, dst, null);
 		
